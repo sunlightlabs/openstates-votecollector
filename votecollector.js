@@ -113,7 +113,25 @@ function collectVotes(){
     var bla = Browser.msgBox("You must defined a named range named 'state' that contains a two letter US state abbreviation", Browser.Buttons.OK);
     return;
   }
- 
+  
+  if (bills == null) {
+    //check if subjects are supported for this state
+    Utilities.sleep(1000);
+    var subflag = false;
+    var state_metadata = Utilities.jsonParse(UrlFetchApp.fetch("http://openstates.org/api/v1/metadata/" + state + "?apikey=" + api_key).getContentText());
+    for( i in state_metadata['feature_flags']){
+      if (state_metadata['feature_flags'][i] == 'subjects'){
+        Logger.log("has subjects");
+        subflag = true;
+      }
+    }
+    
+    if (subflag == false) {
+      Browser.msgBox("This state does not currently provide bill subjects. Please specify bill ids to use the script or choose another state.");
+      return;
+    }
+  }
+   
   var legislators = getLegislators(spreadsheet, state, api_key);
   var bill_list = [];
   var bill_votes = {};
@@ -134,6 +152,7 @@ function collectVotes(){
   if( bills == null) { 
     //get bills for this category
     Logger.log(bill_search_endpoint);
+    Utilities.sleep(1000);
     var bills = Utilities.jsonParse(UrlFetchApp.fetch(bill_search_endpoint).getContentText());
   
     //get all bills with at least one vote
@@ -255,4 +274,3 @@ function collectVotes(){
     
   };
 };
-
