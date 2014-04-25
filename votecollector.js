@@ -113,25 +113,7 @@ function collectVotes(){
     var bla = Browser.msgBox("You must defined a named range named 'state' that contains a two letter US state abbreviation", Browser.Buttons.OK);
     return;
   }
-  
-  if (bills == null) {
-    //check if subjects are supported for this state
-    Utilities.sleep(1000);
-    var subflag = false;
-    var state_metadata = Utilities.jsonParse(UrlFetchApp.fetch("http://openstates.org/api/v1/metadata/" + state + "?apikey=" + api_key).getContentText());
-    for( i in state_metadata['feature_flags']){
-      if (state_metadata['feature_flags'][i] == 'subjects'){
-        Logger.log("has subjects");
-        subflag = true;
-      }
-    }
-    
-    if (subflag == false) {
-      Browser.msgBox("This state does not currently provide bill subjects. Please specify bill ids to use the script or choose another state.");
-      return;
-    }
-  }
-   
+ 
   var legislators = getLegislators(spreadsheet, state, api_key);
   var bill_list = [];
   var bill_votes = {};
@@ -152,7 +134,6 @@ function collectVotes(){
   if( bills == null) { 
     //get bills for this category
     Logger.log(bill_search_endpoint);
-    Utilities.sleep(1000);
     var bills = Utilities.jsonParse(UrlFetchApp.fetch(bill_search_endpoint).getContentText());
   
     //get all bills with at least one vote
@@ -182,13 +163,14 @@ function collectVotes(){
     for (b in bill_names){
     
       var bill_num = bill_names[b].replace(/\(.*\)/, '').trim();  //remove the vote parenthetical if it exists
+      bill_num = bill_num.replace(/\./g,"");
       var bill = Utilities.jsonParse(UrlFetchApp.fetch(bill_group_endpoint + "&bill_id=" + encodeURIComponent(bill_num)).getContentText())[0];
-      
-      
+
       if(bill['votes'].length > 0) {
+        Logger.log(bill["votes"]);
         bill_list.push(bill['bill_id']);
-        var vote = bill['votes'][bill['votes'].length-1]; //get last vote, ordered by date
-        Logger.log(vote);
+        var vote = bill['votes'][0]; //get last vote, ordered by date
+        //Logger.log(vote);
         var yes_votes = vote['yes_votes'];
         var no_votes = vote['no_votes'];
         var other_votes = vote['other_votes'];
