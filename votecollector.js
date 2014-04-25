@@ -132,6 +132,23 @@ function collectVotes(){
 
 
   if( bills == null) { 
+  
+    Utilities.sleep(1000);
+  
+    var subflag = false;
+    var state_metadata = Utilities.jsonParse(UrlFetchApp.fetch("http://openstates.org/api/v1/metadata/" + state + "?apikey=" + api_key).getContentText());
+    for( i in state_metadata['feature_flags']){
+      if (state_metadata['feature_flags'][i] == 'subjects'){
+        Logger.log("has subjects");
+        subflag = true;
+      }
+    }
+    
+    if (subflag == false) {
+      Browser.msgBox("This state does not currently provide bill subjects. Please specify bill ids to use the script or choose another state.");
+      return;
+    }
+    
     //get bills for this category
     Logger.log(bill_search_endpoint);
     var bills = Utilities.jsonParse(UrlFetchApp.fetch(bill_search_endpoint).getContentText());
